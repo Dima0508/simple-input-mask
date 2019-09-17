@@ -4,10 +4,8 @@ import './style.css';
 
 var patternAlias = {
   9:    '[0-9]',
-  '9+': '[1-9]',
   a:    '[a-z]',
   A:    '[A-Z]',
-  Aa:   '[A-Za-z]',
 };
 
 /**
