@@ -1,11 +1,11 @@
 // Import stylesheets
-import $ from "jquery";
-import './style.css';
+import $ from "./node_modules/jquery";
+import "./style.css";
 
 var patternAlias = {
-  9:    '[0-9]',
-  a:    '[a-z]',
-  A:    '[A-Z]',
+  9: "[0-9]",
+  a: "[a-z]",
+  A: "[A-Z]"
 };
 
 /**
@@ -14,13 +14,13 @@ var patternAlias = {
  * @returns {string}
  */
 function trimNumeric(value) {
-    let trimValue = +value;
+  let trimValue = +value;
 
-    if (new RegExp('^[\.]$').test(trimValue) || !+trimValue) {
-        trimValue = '';
-    }
+  if (new RegExp("^[.]$").test(trimValue) || !+trimValue) {
+    trimValue = "";
+  }
 
-    return trimValue;
+  return trimValue;
 }
 
 /**
@@ -35,11 +35,11 @@ function parsePattern(regexpString) {
       symbol: null,
       isRegexp: false,
       min: 1,
-      max: 1,
+      max: 1
     };
 
-    if (regexpString[currentKey] === '{') {
-      let charLimitRegexp = new RegExp('{(\\d*),(\\d*)}', 'g');
+    if (regexpString[currentKey] === "{") {
+      let charLimitRegexp = new RegExp("{(\\d*),(\\d*)}", "g");
       charLimitRegexp.lastIndex = currentKey - 1;
       let limit = charLimitRegexp.exec(regexpString);
 
@@ -65,7 +65,7 @@ function parsePattern(regexpString) {
     regexpArray[currentKey] = param;
   }
 
-  return regexpArray.filter((param) => param !== undefined);
+  return regexpArray.filter(param => param !== undefined);
 }
 
 /**
@@ -74,75 +74,79 @@ function parsePattern(regexpString) {
  * Add your pattern alias to switch or pas pattern in data attribute.
  */
 function inputPattern() {
-    $('input[data-pattern]').each(function () {
-        const patternData = $(this).data('pattern');
-        let patternString;
-        let testParams = [];
+  $("input[data-pattern]").each(function() {
+    const patternData = $(this).data("pattern");
+    let patternString;
+    let testParams = [];
 
-        /**
-         * On blur callback.
-         * @param value
-         * @returns {*}
-         */
-        var onBlur = function (value) {
-            return value;
-        };
+    /**
+     * On blur callback.
+     * @param value
+     * @returns {*}
+     */
+    var onBlur = function(value) {
+      return value;
+    };
 
-        /**
-         * Pattern aliases.
-         */
-        switch (patternData) {
-        case 'price':
-            patternString = '9{1,4}.9{1,2}'
-            onBlur = trimNumeric;
-            break;
+    /**
+     * Pattern aliases.
+     */
+    switch (patternData) {
+      case "price":
+        patternString = "9{1,4}.9{1,2}";
+        onBlur = trimNumeric;
+        break;
 
-        case 'date':
-            patternString = '99/99/Aa';
-            onBlur = trimNumeric;
-            break;
+      case "date":
+        patternString = "99/99/Aa";
+        onBlur = trimNumeric;
+        break;
 
-        default:
-            patternString = patternData;
+      default:
+        patternString = patternData;
+    }
+
+    testParams = parsePattern(patternString);
+
+    /**
+     * Test input value.
+     */
+    $(this).on("input paste", function(e) {
+      let value = $(this).val();
+      let newValue = "";
+      let lastIndex = 0;
+
+      testParams.forEach(param => {
+        let regexpString;
+        if (param.isRegexp) {
+          regexpString = `${param.symbol}{${param.min},${param.max}}`;
+        } else {
+          regexpString = `[${param.symbol}]`;
         }
 
-        testParams = parsePattern(patternString);
+        const currentRegexp = new RegExp(regexpString, "g");
+        currentRegexp.lastIndex = lastIndex;
+        const match = currentRegexp.exec(value);
+        newValue += match ? match[0] : "";
+        lastIndex = currentRegexp.lastIndex
+          ? currentRegexp.lastIndex
+          : lastIndex + 1;
+      });
 
-        /**
-         * Test input value.
-         */
-        $(this).on('input paste', function (e) {
-          let value = $(this).val();
-          let newValue = '';
-          let lastIndex = 0;
-
-          testParams.forEach((param) => {
-            let regexpString;
-            if (param.isRegexp) {
-              regexpString = `${param.symbol}{${param.min},${param.max}}`;
-            } else {
-              regexpString = `[${param.symbol}]`;
-            }
-
-            const currentRegexp = new RegExp(regexpString, 'g');
-            currentRegexp.lastIndex = lastIndex;
-            const match = currentRegexp.exec(value);
-            newValue += match ? match[0] : '';
-            lastIndex = currentRegexp.lastIndex ? currentRegexp.lastIndex : lastIndex + 1;
-          });
-    
-          $(this).val(newValue);
-        });
-
-        /**
-         * On blur callback.
-         */
-        $(this).blur(function () {
-            $(this).val(onBlur($(this).val())).trigger('input');
-        });
+      $(this).val(newValue);
     });
+
+    /**
+     * On blur callback.
+     */
+    $(this).blur(function() {
+      $(this)
+        .val(onBlur($(this).val()))
+        .trigger("input");
+    });
+  });
 }
 
 $(document).ready(() => {
   inputPattern();
-})
+});
